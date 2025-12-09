@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5003/api/notifications';
+const API_BASE_URL = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL 
+  ? `${process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL}/notifications`
+  : 'http://localhost:5003/api/notifications';
 
 const notificationService = {
   getNotifications: async (unreadOnly = false) => {

@@ -73,7 +73,7 @@ export default function DoctorDetailsPage() {
     const dayOfWeek = getDayOfWeek(bookingDate);
     const daySchedule = doctor.availability[dayOfWeek];
     if (daySchedule && daySchedule.enabled && daySchedule.slots) {
-      return daySchedule.slots.map(slot => formatSlotWithAmPm(slot));
+      return daySchedule.slots.map((slot: string) => formatSlotWithAmPm(slot));
     }
     return [];
   };
@@ -370,7 +370,7 @@ export default function DoctorDetailsPage() {
                   disabled={isSubmitting}
                 >
                   <option value="">Choose a date</option>
-                  {getAvailableDates().map(date => (
+                  {getAvailableDates().map((date: string) => (
                     <option key={date} value={date}>
                       {moment(date).format('MMM D, YYYY')} ({getDayOfWeek(date)})
                     </option>
@@ -389,7 +389,7 @@ export default function DoctorDetailsPage() {
                     disabled={isSubmitting}
                   >
                     <option value="">Choose a time slot</option>
-                    {getAvailableSlots().map(slot => (
+                    {getAvailableSlots().map((slot: string) => (
                       <option key={slot} value={slot}>{slot}</option>
                     ))}
                   </select>

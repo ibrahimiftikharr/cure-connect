@@ -1,0 +1,3 @@
+@echo off
+echo Starting CureConnect Frontend...
+npm run dev

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import io, { Socket } from 'socket.io-client';
 
+const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL?.replace('/api', '') || 'http://localhost:5003';
+
 export const useNotificationSocket = (userId: string, onNotification: (notification: any) => void) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
@@ -10,7 +12,7 @@ export const useNotificationSocket = (userId: string, onNotification: (notificat
   useEffect(() => {
     if (!userId) return;
 
-    const newSocket = io('http://localhost:5003', {
+    const newSocket = io(NOTIFICATION_SOCKET_URL, {
       transports: ['websocket', 'polling'],
     });
 

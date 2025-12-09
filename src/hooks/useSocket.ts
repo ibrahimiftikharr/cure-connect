@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_APPOINTMENT_API_URL?.replace('/api', '') || 'http://localhost:5002';
+const SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL?.replace('/api', '') || 'http://localhost:5003';
 
 export const useSocket = (userId: string, role: 'doctor' | 'patient', onEvent: (event: string, data: any) => void) => {
   const socketRef = useRef<Socket | null>(null);

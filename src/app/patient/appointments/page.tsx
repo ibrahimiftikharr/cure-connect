@@ -43,7 +43,13 @@ export default function PatientAppointmentsPage() {
     try {
       setLoading(true);
       const response = await appointmentService.getAppointments(filter === 'all' ? undefined : filter);
-      setAppointments(response.appointments || []);
+      const sortedAppointments = (response.appointments || []).sort((a: AppointmentData, b: AppointmentData) => {
+        // Sort by date descending (latest first), then by time descending
+        const dateCompare = moment(b.appointmentDate).diff(moment(a.appointmentDate));
+        if (dateCompare !== 0) return dateCompare;
+        return moment(b.appointmentTime, 'HH:mm').diff(moment(a.appointmentTime, 'HH:mm'));
+      });
+      setAppointments(sortedAppointments);
     } catch (error: any) {
       console.error('Failed to fetch appointments:', error);
     } finally {

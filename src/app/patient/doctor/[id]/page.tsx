@@ -47,12 +47,33 @@ export default function DoctorDetailsPage() {
     return moment(dateString).format('dddd');
   };
 
+  const formatSlotWithAmPm = (slot: string): string => {
+    // Check if slot already has AM/PM
+    if (slot.includes('AM') || slot.includes('PM')) {
+      return slot;
+    }
+    
+    // Parse and format slot that doesn't have AM/PM (e.g., "09:00 - 10:00")
+    const parts = slot.split(' - ');
+    if (parts.length === 2) {
+      const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+      };
+      return `${formatTime(parts[0])} - ${formatTime(parts[1])}`;
+    }
+    return slot;
+  };
+
   const getAvailableSlots = () => {
     if (!doctor?.availability || !bookingDate) return [];
     const dayOfWeek = getDayOfWeek(bookingDate);
     const daySchedule = doctor.availability[dayOfWeek];
     if (daySchedule && daySchedule.enabled && daySchedule.slots) {
-      return daySchedule.slots;
+      return daySchedule.slots.map(slot => formatSlotWithAmPm(slot));
     }
     return [];
   };

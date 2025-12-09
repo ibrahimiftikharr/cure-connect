@@ -8,14 +8,6 @@ import { Avatar } from '@/components/Avatar';
 import { Save, Loader2, User, Heart, FileText, Phone, Camera } from 'lucide-react';
 import { authService } from '@/lib/authService';
 
-// Declare Google Maps types
-declare global {
-  interface Window {
-    google: any;
-    initMap: () => void;
-  }
-}
-
 export default function PatientProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -27,7 +19,6 @@ export default function PatientProfilePage() {
   const [profileExists, setProfileExists] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
-  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     phone: '',
@@ -57,44 +48,6 @@ export default function PatientProfilePage() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
-
-  useEffect(() => {
-    // Load Google Maps script
-    const loadGoogleMaps = () => {
-      if (window.google) {
-        initAutocomplete();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyA7e3dxeNL_-DWYiAAquXEKr_newclW_rc&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initAutocomplete();
-      document.head.appendChild(script);
-    };
-
-    const initAutocomplete = () => {
-      if (!addressInputRef.current || !window.google) return;
-
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        addressInputRef.current,
-        { types: ['address'] }
-      );
-
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.formatted_address) {
-          setFormData(prev => ({
-            ...prev,
-            address: place.formatted_address
-          }));
-        }
-      });
-    };
-
-    loadGoogleMaps();
   }, []);
 
   const fetchProfile = async () => {
@@ -425,16 +378,14 @@ export default function PatientProfilePage() {
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Address *</label>
                 <input
-                  ref={addressInputRef}
                   type="text"
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder="Start typing your address..."
+                  placeholder="Enter your complete address"
                   required
                 />
-                <p className="text-sm text-gray-500 mt-1">Begin typing to see address suggestions</p>
               </div>
             </div>
 

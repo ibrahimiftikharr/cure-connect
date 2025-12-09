@@ -9,7 +9,8 @@
     "lint": "next lint",
     "auth-service": "cd services/auth-service && npm run dev",
     "appointment-service": "cd services/appointment-service && npm run dev",
-    "services": "concurrently \"npm run auth-service\" \"npm run appointment-service\"",
+    "notification-service": "cd services/notification-service && npm run dev",
+    "services": "concurrently \"npm run auth-service\" \"npm run appointment-service\" \"npm run notification-service\"",
     "dev:all": "concurrently \"npm run services\" \"npm run dev\""
   },
   "dependencies": {

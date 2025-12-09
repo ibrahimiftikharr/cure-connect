@@ -30,13 +30,10 @@ export default function DoctorProfilePage() {
     qualifications: '',
     yearsOfExperience: '',
     city: '',
-    state: '',
     about: '',
     consultationFee: '',
     languages: [] as string[],
     specializations: [] as string[],
-    education: [] as string[],
-    certifications: [] as string[],
   });
 
   const [availability, setAvailability] = useState<Availability>({
@@ -51,8 +48,6 @@ export default function DoctorProfilePage() {
 
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [newTimeSlot, setNewTimeSlot] = useState({ start: '09:00', end: '10:00' });
-  const [newEducation, setNewEducation] = useState('');
-  const [newCertification, setNewCertification] = useState('');
 
   const specialtyOptions = [
     'Cardiology', 'Dermatology', 'Neurology', 'Pediatrics',
@@ -90,13 +85,10 @@ export default function DoctorProfilePage() {
             qualifications: userData?.qualifications || '',
             yearsOfExperience: profile.yearsOfExperience || '',
             city: profile.city || '',
-            state: profile.state || '',
             about: profile.about || '',
             consultationFee: profile.consultationFee || '',
             languages: profile.languages || [],
             specializations: profile.specializations || [],
-            education: profile.education || [],
-            certifications: profile.certifications || [],
           });
 
           if (profile.availability) {
@@ -121,8 +113,18 @@ export default function DoctorProfilePage() {
     });
   };
 
+  const formatTo12Hour = (time24: string): string => {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+  };
+
   const addTimeSlot = () => {
-    const slotString = `${newTimeSlot.start} - ${newTimeSlot.end}`;
+    const formattedStart = formatTo12Hour(newTimeSlot.start);
+    const formattedEnd = formatTo12Hour(newTimeSlot.end);
+    const slotString = `${formattedStart} - ${formattedEnd}`;
     if (!availability[selectedDay].slots.includes(slotString)) {
       setAvailability({
         ...availability,
@@ -164,22 +166,6 @@ export default function DoctorProfilePage() {
         [field]: [...array, value]
       });
     }
-  };
-
-  const addToArray = (field: 'education' | 'certifications', value: string) => {
-    if (value && !formData[field].includes(value)) {
-      setFormData({
-        ...formData,
-        [field]: [...formData[field], value]
-      });
-    }
-  };
-
-  const removeFromArray = (field: 'education' | 'certifications', value: string) => {
-    setFormData({
-      ...formData,
-      [field]: formData[field].filter(item => item !== value)
-    });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -467,102 +453,6 @@ export default function DoctorProfilePage() {
                     required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">State</label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="State"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Education */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Education</h2>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newEducation}
-                    onChange={(e) => setNewEducation(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="Add education (e.g., MD - Cardiology, Harvard Medical School)"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      addToArray('education', newEducation);
-                      setNewEducation('');
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-                {formData.education.length > 0 && (
-                  <div className="space-y-2">
-                    {formData.education.map((edu, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700">{edu}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeFromArray('education', edu)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Certifications */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Certifications</h2>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCertification}
-                    onChange={(e) => setNewCertification(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="Add certification (e.g., Board Certified Cardiologist)"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      addToArray('certifications', newCertification);
-                      setNewCertification('');
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-                {formData.certifications.length > 0 && (
-                  <div className="space-y-2">
-                    {formData.certifications.map((cert, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700">{cert}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeFromArray('certifications', cert)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 

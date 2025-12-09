@@ -1,73 +1,93 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PatientNav } from '@/components/PatientNav';
+import { NotificationCard } from '@/components/NotificationCard';
 import { Calendar, Clock, Video, Search } from 'lucide-react';
-import { Notification, Appointment } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import notificationService from '@/lib/notificationService';
+import appointmentService from '@/lib/appointmentService';
+import { useNotificationSocket } from '@/hooks/useNotificationSocket';
+import moment from 'moment';
+
+interface AppointmentData {
+  _id: string;
+  doctor: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  timeSlot: string;
+  symptoms: string;
+  status: string;
+  meetLink?: string;
+  doctorInfo: {
+    name: string;
+    specialty: string;
+    consultationFee?: number;
+    phone?: string;
+  };
+}
 
 export default function PatientDashboardPage() {
-  const [notifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'approved',
-      message: 'Dr. Sarah Smith approved your appointment for Dec 10, 2024',
-      time: '5 minutes ago',
-      read: false
-    },
-    {
-      id: '2',
-      type: 'reminder',
-      message: 'Upcoming appointment with Dr. Michael Brown in 10 minutes',
-      time: '10 minutes ago',
-      read: false
-    },
-    {
-      id: '3',
-      type: 'rescheduled',
-      message: 'Dr. Emily Davis rescheduled your appointment to Dec 12, 2024',
-      time: '2 hours ago',
-      read: true
-    }
-  ]);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentData[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
 
-  const upcomingAppointments: Appointment[] = [
-    {
-      id: '1',
-      doctorName: 'Dr. Sarah Smith',
-      specialty: 'Cardiology',
-      date: 'Dec 10, 2024',
-      time: '2:00 PM',
-      status: 'approved',
-      meetLink: 'https://meet.google.com/abc-defg-hij'
-    },
-    {
-      id: '2',
-      doctorName: 'Dr. Michael Brown',
-      specialty: 'Dermatology',
-      date: 'Dec 8, 2024',
-      time: '11:00 AM',
-      status: 'approved',
-      meetLink: 'https://meet.google.com/xyz-uvwx-rst'
-    },
-    {
-      id: '3',
-      doctorName: 'Dr. Emily Davis',
-      specialty: 'Pediatrics',
-      date: 'Dec 12, 2024',
-      time: '10:00 AM',
-      status: 'pending'
+  const fetchNotifications = async () => {
+    try {
+      const data = await notificationService.getNotifications();
+      setNotifications(data.notifications || []);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
     }
-  ];
+  };
+
+  const fetchUpcomingAppointments = async () => {
+    try {
+      setLoadingAppointments(true);
+      const response = await appointmentService.getAppointments('approved');
+      const upcoming = response.appointments
+        .filter((apt: AppointmentData) => {
+          const aptDate = moment(apt.appointmentDate);
+          return aptDate.isSameOrAfter(moment(), 'day');
+        })
+        .sort((a: AppointmentData, b: AppointmentData) => {
+          return moment(a.appointmentDate).diff(moment(b.appointmentDate));
+        })
+        .slice(0, 3);
+      setAppointments(upcoming);
+    } catch (error) {
+      console.error('Failed to fetch appointments:', error);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      fetchUpcomingAppointments();
+    }
+  }, [user]);
+
+  useNotificationSocket(user?.id || '', (notification) => {
+    setNotifications(prev => [notification, ...prev]);
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PatientNav notifications={notifications} />
+      <PatientNav />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h1>
           <p className="text-gray-600">Manage your health appointments and find doctors</p>
+        </div>
+
+        {/* Notifications Card */}
+        <div className="mb-8">
+          <NotificationCard notifications={notifications} onUpdate={fetchNotifications} />
         </div>
 
         {/* Quick Actions */}
@@ -103,51 +123,74 @@ export default function PatientDashboardPage() {
             </Link>
           </div>
 
-          <div className="space-y-4">
-            {upcomingAppointments.map(appointment => (
-              <div
-                key={appointment.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{appointment.doctorName}</h3>
-                  <p className="text-sm text-gray-600">{appointment.specialty}</p>
-                  <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={16} />
-                      {appointment.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={16} />
-                      {appointment.time}
-                    </span>
+          {loadingAppointments ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : appointments.length > 0 ? (
+            <div className="space-y-4">
+              {appointments.map(appointment => (
+                <div
+                  key={appointment._id}
+                  className="flex flex-col p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{appointment.doctorInfo.name}</h3>
+                      <p className="text-sm text-gray-600">{appointment.doctorInfo.specialty}</p>
+                      <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={16} />
+                          {moment(appointment.appointmentDate).format('MMM D, YYYY')}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={16} />
+                          {moment(appointment.appointmentTime, 'HH:mm').format('h:mm A')}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                          {appointment.timeSlot}
+                        </span>
+                      </div>
+                      {appointment.symptoms && (
+                        <p className="text-sm text-gray-700 mt-2">
+                          <strong>Symptoms:</strong> {appointment.symptoms}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-4 sm:mt-0 flex items-center gap-3">
+                      {appointment.meetLink ? (
+                        <a
+                          href={appointment.meetLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          <Video size={16} />
+                          Join Call
+                        </a>
+                      ) : (
+                        <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                          Approved
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                <div className="mt-4 sm:mt-0 flex items-center gap-3">
-                  {appointment.status === 'approved' && appointment.meetLink ? (
-                    <a
-                      href={appointment.meetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      <Video size={16} />
-                      Join Call
-                    </a>
-                  ) : (
-                    <span className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                      appointment.status === 'approved'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {appointment.status === 'approved' ? 'Approved' : 'Pending'}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Calendar size={48} className="mx-auto mb-3 text-gray-300" />
+              <p className="text-gray-600">No upcoming appointments</p>
+              <Link
+                href="/patient/search"
+                className="mt-4 inline-block text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Find a doctor
+              </Link>
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -97,14 +97,18 @@ const bookAppointment = async (req, res) => {
     });
 
     // Send notification to doctor
+    const moment = require('moment-timezone');
+    const formattedDate = moment(appointmentDate).format('MMM D, YYYY');
+    const formattedTime = moment(appointmentTime, 'HH:mm').format('h:mm A');
+    
     await sendNotification(
       doctorId,
       'doctor',
       'appointment_booked',
       'New Appointment Request',
-      `${patientDetails.name} has requested an appointment on ${appointmentDate} at ${appointmentTime}`,
+      `${patientDetails.name} requested an appointment on ${formattedDate} at ${formattedTime}`,
       appointment._id,
-      { patientName: patientDetails.name, appointmentDate, appointmentTime }
+      { patientName: patientDetails.name, appointmentDate: formattedDate, appointmentTime: formattedTime }
     );
 
     res.status(201).json({
@@ -189,14 +193,18 @@ const approveAppointment = async (req, res) => {
     });
 
     // Send notification to patient
+    const moment = require('moment-timezone');
+    const formattedDate = moment(appointment.appointmentDate).format('MMM D, YYYY');
+    const formattedTime = moment(appointment.appointmentTime, 'HH:mm').format('h:mm A');
+    
     await sendNotification(
       appointment.patient.toString(),
       'patient',
       'appointment_approved',
       'Appointment Approved',
-      `Dr. ${appointment.doctorInfo.name} has approved your appointment on ${appointment.appointmentDate} at ${appointment.appointmentTime}`,
+      `Your appointment on ${formattedDate} at ${formattedTime} has been approved`,
       appointment._id,
-      { doctorName: appointment.doctorInfo.name, appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime, meetLink: appointment.meetLink }
+      { appointmentDate: formattedDate, appointmentTime: formattedTime, meetLink: appointment.meetLink }
     );
 
     res.json({
@@ -244,14 +252,18 @@ const rejectAppointment = async (req, res) => {
     });
 
     // Send notification to patient
+    const moment = require('moment-timezone');
+    const formattedDate = moment(appointment.appointmentDate).format('MMM D, YYYY');
+    const formattedTime = moment(appointment.appointmentTime, 'HH:mm').format('h:mm A');
+    
     await sendNotification(
       appointment.patient.toString(),
       'patient',
       'appointment_rejected',
       'Appointment Rejected',
-      `Dr. ${appointment.doctorInfo.name} has rejected your appointment. Reason: ${reason}`,
+      `Your appointment on ${formattedDate} at ${formattedTime} has been rejected. Reason: ${reason}`,
       appointment._id,
-      { doctorName: appointment.doctorInfo.name, reason, appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime }
+      { reason, appointmentDate: formattedDate, appointmentTime: formattedTime }
     );
 
     res.json({
@@ -303,18 +315,20 @@ const completeAppointment = async (req, res) => {
     );
 
     // Send notification to the other party
+    const moment = require('moment-timezone');
+    const formattedDate = moment(appointment.appointmentDate).format('MMM D, YYYY');
+    const formattedTime = moment(appointment.appointmentTime, 'HH:mm').format('h:mm A');
     const recipientId = userRole === 'doctor' ? appointment.patient.toString() : appointment.doctor.toString();
     const recipientRole = userRole === 'doctor' ? 'patient' : 'doctor';
-    const completedByName = userRole === 'doctor' ? appointment.doctorInfo.name : appointment.patientInfo.name;
     
     await sendNotification(
       recipientId,
       recipientRole,
       'appointment_completed',
       'Appointment Completed',
-      `Your appointment has been marked as completed by ${completedByName}`,
+      `Your appointment on ${formattedDate} at ${formattedTime} has been completed`,
       appointment._id,
-      { completedBy: userRole, appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime }
+      { appointmentDate: formattedDate, appointmentTime: formattedTime }
     );
 
     res.json({

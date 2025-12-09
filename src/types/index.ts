@@ -6,6 +6,13 @@ export interface User {
   role: UserRole;
   name?: string;
   profileComplete?: boolean;
+  isVerified?: boolean;
+  specialty?: string;
+  qualifications?: string;
+  profilePicture?: {
+    url: string;
+    publicId: string;
+  };
 }
 
 export interface Notification {

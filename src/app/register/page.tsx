@@ -100,7 +100,7 @@ export default function RegisterPage() {
       const response = await authService.verifyOTP(email, enteredOtp);
       
       // Login user with the returned data
-      login(response.user);
+      login(response.user, response.token);
 
       // Redirect based on role
       if (response.user.role === 'doctor') {

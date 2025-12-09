@@ -125,7 +125,7 @@ const verifyOTP = async (req, res) => {
     await user.save();
 
     // Generate JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     setTokenCookie(res, token);
 
     // Send welcome email
@@ -244,7 +244,7 @@ const login = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     setTokenCookie(res, token);
 
     // Return user data without password

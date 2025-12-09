@@ -1,24 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, Bell, Menu, X } from 'lucide-react';
+import { Heart, Bell, Menu, X, Check, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar } from '@/components/Avatar';
-import { Notification } from '@/types';
+import notificationService from '@/lib/notificationService';
+import { useNotificationSocket } from '@/hooks/useNotificationSocket';
+import moment from 'moment';
 
-interface PatientNavProps {
-  notifications?: Notification[];
+interface NotificationData {
+  _id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  createdAt: string;
 }
 
-export function PatientNav({ notifications = [] }: PatientNavProps) {
+export function PatientNav() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const fetchNotifications = async () => {
+    try {
+      const data = await notificationService.getNotifications();
+      setNotifications(data.notifications || []);
+      setUnreadCount(data.unreadCount || 0);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user]);
+
+  useNotificationSocket(user?.id || '', (notification) => {
+    setNotifications(prev => [notification, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  });
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
+  const handleDelete = async (notificationId: string) => {
+    try {
+      await notificationService.deleteNotification(notificationId);
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
 
   const navLinks = [
     { href: '/patient/dashboard', label: 'Dashboard' },
@@ -76,26 +131,61 @@ export function PatientNav({ notifications = [] }: PatientNavProps) {
                     className="fixed inset-0 z-40" 
                     onClick={() => setShowNotifications(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
-                    <div className="p-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                    <div className="p-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white flex justify-between items-center">
                       <h3 className="font-semibold">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg flex items-center gap-1"
+                        >
+                          <Check size={14} />
+                          Mark all read
+                        </button>
+                      )}
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.length > 0 ? (
                         notifications.map(notif => (
                           <div
-                            key={notif.id}
+                            key={notif._id}
                             className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
                               !notif.read ? 'bg-blue-50' : ''
                             }`}
                           >
-                            <p className="text-sm text-gray-800">{notif.message}</p>
-                            <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-gray-900">{notif.title}</p>
+                                <p className="text-sm text-gray-700 mt-1">{notif.message}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {moment(notif.createdAt).fromNow()}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                {!notif.read && (
+                                  <button
+                                    onClick={() => handleMarkAsRead(notif._id)}
+                                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                    title="Mark as read"
+                                  >
+                                    <Check size={16} />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDelete(notif._id)}
+                                  className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         ))
                       ) : (
-                        <div className="p-4 text-center text-gray-500">
-                          No notifications
+                        <div className="p-8 text-center text-gray-500">
+                          <Bell size={48} className="mx-auto mb-2 text-gray-300" />
+                          <p>No notifications</p>
                         </div>
                       )}
                     </div>

@@ -6,6 +6,8 @@ import { PatientNav } from '@/components/PatientNav';
 import { Avatar } from '@/components/Avatar';
 import { MapPin, Star, Calendar, ArrowLeft, Award, Languages, DollarSign, Clock } from 'lucide-react';
 import authService from '@/lib/authService';
+import appointmentService from '@/lib/appointmentService';
+import moment from 'moment-timezone';
 
 export default function DoctorDetailsPage() {
   const params = useParams();
@@ -13,7 +15,9 @@ export default function DoctorDetailsPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
+  const [bookingSlot, setBookingSlot] = useState('');
   const [symptoms, setSymptoms] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [doctor, setDoctor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -39,24 +43,87 @@ export default function DoctorDetailsPage() {
     }
   }, [params.id]);
 
-  const availableDates = [
-    'Dec 8, 2024',
-    'Dec 9, 2024',
-    'Dec 10, 2024',
-    'Dec 11, 2024',
-    'Dec 12, 2024'
-  ];
+  const getDayOfWeek = (dateString: string) => {
+    return moment(dateString).format('dddd');
+  };
 
-  const availableTimes = [
-    '9:00 AM', '10:00 AM', '11:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'
-  ];
+  const getAvailableSlots = () => {
+    if (!doctor?.availability || !bookingDate) return [];
+    const dayOfWeek = getDayOfWeek(bookingDate);
+    const daySchedule = doctor.availability[dayOfWeek];
+    if (daySchedule && daySchedule.enabled && daySchedule.slots) {
+      return daySchedule.slots;
+    }
+    return [];
+  };
 
-  const handleBooking = (e: React.FormEvent) => {
+  const getAvailableDates = () => {
+    if (!doctor?.availability) return [];
+    const dates = [];
+    const today = moment().tz('Asia/Karachi');
+    
+    for (let i = 0; i < 30; i++) {
+      const date = today.clone().add(i, 'days');
+      const dayOfWeek = date.format('dddd');
+      const daySchedule = doctor.availability[dayOfWeek];
+      
+      if (daySchedule && daySchedule.enabled && daySchedule.slots && daySchedule.slots.length > 0) {
+        dates.push(date.format('YYYY-MM-DD'));
+      }
+    }
+    return dates;
+  };
+
+  const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In real app, save appointment to backend
-    alert('Appointment request sent! The doctor will review and confirm.');
-    setShowBookingModal(false);
-    router.push('/patient/appointments');
+    
+    if (!bookingDate || !bookingTime || !bookingSlot || !symptoms.trim()) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    // Validate time is within slot
+    const [slotStart, slotEnd] = bookingSlot.split(' - ');
+    const selectedTime = moment(bookingTime, 'HH:mm');
+    const slotStartTime = moment(slotStart, 'hh:mm A');
+    const slotEndTime = moment(slotEnd, 'hh:mm A');
+
+    if (!selectedTime.isBetween(slotStartTime, slotEndTime, null, '[)')) {
+      alert(`Please select a time between ${slotStart} and ${slotEnd}`);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      await appointmentService.bookAppointment({
+        doctorId: params.id as string,
+        appointmentDate: bookingDate,
+        appointmentTime: bookingTime,
+        timeSlot: bookingSlot,
+        symptoms: symptoms.trim(),
+      });
+      
+      alert('Appointment booked successfully! The doctor will review and approve it.');
+      setShowBookingModal(false);
+      setBookingDate('');
+      setBookingTime('');
+      setBookingSlot('');
+      setSymptoms('');
+      router.push('/patient/appointments');
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to book appointment. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSlotChange = (slot: string) => {
+    setBookingSlot(slot);
+    // Clear the time when slot changes so user enters their preferred time
+    setBookingTime('');
   };
 
   if (loading) {
@@ -264,7 +331,7 @@ export default function DoctorDetailsPage() {
       {/* Booking Modal */}
       {showBookingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Book Appointment</h2>
             
             <form onSubmit={handleBooking} className="space-y-4">
@@ -272,31 +339,58 @@ export default function DoctorDetailsPage() {
                 <label className="block text-gray-700 font-medium mb-2">Select Date *</label>
                 <select
                   value={bookingDate}
-                  onChange={(e) => setBookingDate(e.target.value)}
+                  onChange={(e) => {
+                    setBookingDate(e.target.value);
+                    setBookingSlot('');
+                    setBookingTime('');
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   required
+                  disabled={isSubmitting}
                 >
                   <option value="">Choose a date</option>
-                  {availableDates.map(date => (
-                    <option key={date} value={date}>{date}</option>
+                  {getAvailableDates().map(date => (
+                    <option key={date} value={date}>
+                      {moment(date).format('MMM D, YYYY')} ({getDayOfWeek(date)})
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">Select Time *</label>
-                <select
-                  value={bookingTime}
-                  onChange={(e) => setBookingTime(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  required
-                >
-                  <option value="">Choose a time</option>
-                  {availableTimes.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-              </div>
+              {bookingDate && (
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">Select Time Slot *</label>
+                  <select
+                    value={bookingSlot}
+                    onChange={(e) => handleSlotChange(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    required
+                    disabled={isSubmitting}
+                  >
+                    <option value="">Choose a time slot</option>
+                    {getAvailableSlots().map(slot => (
+                      <option key={slot} value={slot}>{slot}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {bookingSlot && (
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">Enter Exact Time *</label>
+                  <input
+                    type="time"
+                    value={bookingTime}
+                    onChange={(e) => setBookingTime(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    required
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Please select a time within your chosen slot: {bookingSlot}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Describe your symptoms *</label>
@@ -307,22 +401,31 @@ export default function DoctorDetailsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                   placeholder="Tell the doctor about your symptoms..."
                   required
+                  disabled={isSubmitting}
                 />
               </div>
 
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowBookingModal(false)}
+                  onClick={() => {
+                    setShowBookingModal(false);
+                    setBookingDate('');
+                    setBookingTime('');
+                    setBookingSlot('');
+                    setSymptoms('');
+                  }}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50"
+                  disabled={isSubmitting}
                 >
-                  Confirm
+                  {isSubmitting ? 'Booking...' : 'Confirm'}
                 </button>
               </div>
             </form>

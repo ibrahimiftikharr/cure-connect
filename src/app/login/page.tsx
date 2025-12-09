@@ -36,7 +36,7 @@ export default function LoginPage() {
       }
 
       // Login user with the returned data
-      login(response.user);
+      login(response.user, response.token);
 
       // Redirect based on role
       if (response.user.role === 'doctor') {

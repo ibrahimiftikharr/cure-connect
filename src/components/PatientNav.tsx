@@ -83,28 +83,29 @@ export function PatientNav() {
   ];
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          <Link href="/patient/dashboard" className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 p-2 rounded-xl">
-              <Heart className="text-white" size={24} />
+        <div className="flex justify-between items-center h-16">
+          <Link href="/patient/dashboard" className="flex items-center gap-3 group">
+            <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-2.5 rounded-xl shadow-lg group-hover:shadow-xl transition-all">
+              <Heart className="text-white" size={22} />
             </div>
-            <span className="text-xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent hidden sm:block font-bold">
-              CureConnect Patient
+            <span className="text-xl font-bold text-gray-900 hidden sm:block tracking-tight">
+              CureConnect
+              <span className="text-sm font-normal text-gray-500 ml-2">Patient</span>
             </span>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   pathname === link.href
-                    ? 'text-blue-600 font-semibold'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'bg-indigo-50 text-indigo-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 {link.label}
@@ -112,15 +113,15 @@ export function PatientNav() {
             ))}
             
             {/* Notifications */}
-            <div className="relative">
+            <div className="relative ml-2">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                className="relative p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-all"
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount}
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-semibold shadow-lg">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
@@ -131,13 +132,13 @@ export function PatientNav() {
                     className="fixed inset-0 z-40" 
                     onClick={() => setShowNotifications(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
-                    <div className="p-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white flex justify-between items-center">
-                      <h3 className="font-semibold">Notifications</h3>
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-elegant-lg border border-gray-100 overflow-hidden z-50 animate-scale-in">
+                    <div className="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white flex justify-between items-center">
+                      <h3 className="font-semibold text-base">Notifications</h3>
                       {unreadCount > 0 && (
                         <button
                           onClick={handleMarkAllAsRead}
-                          className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg flex items-center gap-1"
+                          className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all font-medium"
                         >
                           <Check size={14} />
                           Mark all read

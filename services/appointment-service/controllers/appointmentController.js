@@ -47,6 +47,30 @@ const bookAppointment = async (req, res) => {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
+    // Fetch patient profile details from auth service
+    let patientDetails;
+    try {
+      const token = req.headers.authorization?.split(' ')[1];
+      const response = await axios.get(`${process.env.AUTH_SERVICE_URL}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      patientDetails = {
+        name: req.user.name,
+        email: req.user.email,
+        phone: response.data.data.profile?.phone || 'N/A'
+      };
+    } catch (error) {
+      console.error('Error fetching patient profile:', error);
+      // Fallback to basic user info
+      patientDetails = {
+        name: req.user.name,
+        email: req.user.email,
+        phone: 'N/A'
+      };
+    }
+
     // Check if this exact date and time is already booked
     const existingAppointment = await Appointment.findOne({
       doctor: doctorId,
@@ -58,9 +82,6 @@ const bookAppointment = async (req, res) => {
     if (existingAppointment) {
       return res.status(400).json({ message: 'This time is already booked. Please select another time.' });
     }
-
-    // Get patient details
-    const patientDetails = req.user;
 
     // Create appointment
     const appointment = new Appointment({
@@ -74,7 +95,7 @@ const bookAppointment = async (req, res) => {
       patientInfo: {
         name: patientDetails.name,
         email: patientDetails.email,
-        phone: patientDetails.phone || 'N/A',
+        phone: patientDetails.phone,
       },
       doctorInfo: {
         name: doctorDetails.name,
@@ -144,7 +165,68 @@ const getAppointments = async (req, res) => {
       .sort({ appointmentDate: 1, appointmentTime: 1 })
       .lean();
 
-    res.json({ appointments });
+    // Fetch doctor and patient details for each appointment
+    const appointmentsWithDetails = await Promise.all(
+      appointments.map(async (appointment) => {
+        let doctorInfo = null;
+        let patientInfo = null;
+
+        // Fetch doctor details
+        if (appointment.doctor) {
+          try {
+            const doctorResponse = await axios.get(
+              `${process.env.AUTH_SERVICE_URL}/doctors/${appointment.doctor}`,
+              {
+                headers: {
+                  Authorization: req.headers.authorization,
+                },
+              }
+            );
+            const doctor = doctorResponse.data.data || doctorResponse.data;
+            doctorInfo = {
+              name: doctor.name,
+              email: doctor.email,
+              specialty: doctor.specialty || 'General',
+              consultationFee: doctor.consultationFee || 0,
+              profilePicture: doctor.profilePicture?.url || null,
+            };
+          } catch (error) {
+            console.error('Error fetching doctor details:', error.message);
+          }
+        }
+
+        // Fetch patient details
+        if (appointment.patient) {
+          try {
+            const patientResponse = await axios.get(
+              `${process.env.AUTH_SERVICE_URL}/profile/${appointment.patient}`,
+              {
+                headers: {
+                  Authorization: req.headers.authorization,
+                },
+              }
+            );
+            const patient = patientResponse.data.data;
+            patientInfo = {
+              name: patient.name,
+              email: patient.email,
+              phone: patient.profile?.phone || 'N/A',
+              profilePicture: patient.profilePicture?.url || null,
+            };
+          } catch (error) {
+            console.error('Error fetching patient details:', error.message);
+          }
+        }
+
+        return {
+          ...appointment,
+          doctorInfo,
+          patientInfo,
+        };
+      })
+    );
+
+    res.json({ appointments: appointmentsWithDetails });
   } catch (error) {
     console.error('Error fetching appointments:', error);
     res.status(500).json({ message: 'Error fetching appointments', error: error.message });

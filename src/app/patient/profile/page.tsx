@@ -9,7 +9,7 @@ import { Save, Loader2, User, Heart, FileText, Phone, Camera } from 'lucide-reac
 import { authService } from '@/lib/authService';
 
 export default function PatientProfilePage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const router = useRouter();
   
   const [loading, setLoading] = useState(true);
@@ -140,6 +140,7 @@ export default function PatientProfilePage() {
       const response = await authService.uploadProfilePicture(file);
       if (response.success) {
         setProfilePicture(response.data.profilePicture.url);
+        updateProfile({ profilePicture: response.data.profilePicture });
         setSuccess('Profile picture uploaded successfully!');
         setTimeout(() => setSuccess(''), 3000);
       }

@@ -29,6 +29,7 @@ interface AppointmentData {
     email: string;
     specialty: string;
     consultationFee: number;
+    profilePicture?: string | null;
   };
 }
 
@@ -134,82 +135,108 @@ export default function PatientAppointmentsPage() {
           </div>
         </div>
 
-        {/* Appointments List */}
-        <div className="space-y-4">
+        {/* Appointments Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {appointments.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-              <p className="text-gray-600">No appointments found</p>
+            <div className="col-span-full bg-white rounded-2xl shadow-elegant border border-gray-100 p-12 text-center">
+              <Calendar size={64} className="mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-600 text-lg font-medium">No appointments found</p>
             </div>
           ) : (
             appointments.map(appointment => (
               <div
                 key={appointment._id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl border border-gray-200 overflow-hidden transition-all"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                      {appointment.doctorInfo.name}
-                    </h3>
-                    <p className="text-gray-600 mb-3">{appointment.doctorInfo.specialty}</p>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={16} />
-                        {formatDate(appointment.appointmentDate)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={16} />
-                        {formatTime(appointment.appointmentTime)}
-                      </span>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg">
-                        {appointment.timeSlot}
-                      </span>
+                {/* Status Badge */}
+                <div className="flex justify-end p-3 pb-0">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-md ${
+                    appointment.status === 'pending' ? 'bg-yellow-500' :
+                    appointment.status === 'approved' ? 'bg-green-500' :
+                    appointment.status === 'rejected' ? 'bg-red-500' :
+                    'bg-gray-500'
+                  }`}>
+                    {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                  </span>
+                </div>
+
+                {/* Card Body */}
+                <div className="px-4 pb-4 pt-2 flex flex-col items-center text-center">
+                  {/* Avatar */}
+                  <div className="w-16 h-16 rounded-xl bg-white shadow-lg border border-gray-200 p-0.5 mb-3">
+                    {appointment.doctorInfo?.profilePicture ? (
+                      <img 
+                        src={appointment.doctorInfo.profilePicture} 
+                        alt={appointment.doctorInfo.name || 'Doctor'}
+                        className="w-full h-full rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-2xl font-bold text-indigo-600">
+                        {appointment.doctorInfo?.name?.charAt(0)?.toUpperCase() || 'D'}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <h3 className="text-lg font-bold text-gray-900 mb-0.5 line-clamp-1">
+                    {appointment.doctorInfo?.name || 'Doctor'}
+                  </h3>
+                  <p className="text-indigo-600 font-medium text-xs mb-3 line-clamp-1">{appointment.doctorInfo?.specialty || 'General'}</p>
+                  
+                  <div className="space-y-2 mb-3 w-full">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Calendar size={16} className="text-indigo-600" />
+                      </div>
+                      <span className="font-medium">{formatDate(appointment.appointmentDate)}</span>
                     </div>
-                    {appointment.symptoms && (
-                      <p className="text-gray-700 mt-2">
-                        <strong>Symptoms:</strong> {appointment.symptoms}
-                      </p>
-                    )}
-                    {appointment.rejectionReason && (
-                      <p className="text-red-700 mt-2">
-                        <strong>Rejection Reason:</strong> {appointment.rejectionReason}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Clock size={16} className="text-purple-600" />
+                      </div>
+                      <span className="font-medium">{formatTime(appointment.appointmentTime)}</span>
+                    </div>
+                    <div className="px-3 py-2 bg-indigo-50 rounded-lg">
+                      <span className="text-xs font-bold text-indigo-700">{appointment.timeSlot}</span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <span className={`px-4 py-2 rounded-lg text-sm font-medium text-center ${
-                      appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                      appointment.status === 'approved' ? 'bg-green-100 text-green-700' :
-                      appointment.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                    </span>
+                  {appointment.symptoms && (
+                    <div className="mb-2 p-2 bg-gray-50 rounded-lg w-full">
+                      <p className="text-xs font-semibold text-gray-700">Symptoms:</p>
+                      <p className="text-xs text-gray-600 line-clamp-1">{appointment.symptoms}</p>
+                    </div>
+                  )}
 
-                    {appointment.status === 'approved' && (
-                      <>
-                        {appointment.meetLink && (
-                          <a
-                            href={appointment.meetLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                          >
-                            <Video size={16} />
-                            Join Call
-                          </a>
-                        )}
-                        <button
-                          onClick={() => handleComplete(appointment._id)}
-                          disabled={processingId === appointment._id}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  {appointment.rejectionReason && (
+                    <div className="mb-2 p-2 bg-red-50 rounded-lg border border-red-100 w-full">
+                      <p className="text-xs font-semibold text-red-700">Rejection Reason:</p>
+                      <p className="text-xs text-red-600 line-clamp-1">{appointment.rejectionReason}</p>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {appointment.status === 'approved' && (
+                    <div className="space-y-1.5 w-full">
+                      {appointment.meetLink && (
+                        <a
+                          href={appointment.meetLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all text-xs font-bold"
                         >
-                          {processingId === appointment._id ? 'Processing...' : 'Mark Complete'}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                          <Video size={14} />
+                          Join Call
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleComplete(appointment._id)}
+                        disabled={processingId === appointment._id}
+                        className="w-full px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {processingId === appointment._id ? 'Processing...' : 'Mark Complete'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))

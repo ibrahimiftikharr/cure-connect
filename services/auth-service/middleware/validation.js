@@ -37,14 +37,13 @@ const signupValidation = [
     .notEmpty().withMessage('Role is required')
     .isIn(['patient', 'doctor']).withMessage('Role must be either patient or doctor'),
   
+  // Specialty and qualifications are optional during signup, required only during profile completion
   body('specialty')
-    .if(body('role').equals('doctor'))
-    .notEmpty().withMessage('Specialty is required for doctors')
+    .optional()
     .trim(),
   
   body('qualifications')
-    .if(body('role').equals('doctor'))
-    .notEmpty().withMessage('Qualifications are required for doctors')
+    .optional()
     .trim(),
   
   validate,

@@ -23,7 +23,26 @@ const profileAPI = axios.create({
 authAPI.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || 'An error occurred';
+    console.error('Full API Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      errors: error.response?.data?.errors,
+      message: error.message,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
+      }
+    });
+    
+    // Show specific error messages if available
+    if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+      const errorMessages = error.response.data.errors.map((err: any) => err.message || err).join(', ');
+      return Promise.reject(new Error(errorMessages));
+    }
+    
+    const message = error.response?.data?.message || error.message || 'An error occurred';
     return Promise.reject(new Error(message));
   }
 );

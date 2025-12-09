@@ -111,7 +111,7 @@ You should see:
 🚀 Auth Service running on port 5001
 📍 Environment: development
 🌐 Frontend URL: http://localhost:3000
-✅ MongoDB Connected: localhost
+✅ MongoDB Connected: MongoDB Atlas
 ```
 
 #### Terminal 2 - Frontend

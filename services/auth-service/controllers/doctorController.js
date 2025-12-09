@@ -30,8 +30,6 @@ const searchDoctors = async (req, res) => {
       .populate({
         path: 'user',
         match: { 
-          isVerified: true, 
-          isActive: true,
           profileComplete: true 
         },
         select: 'name email profilePicture specialty qualifications',

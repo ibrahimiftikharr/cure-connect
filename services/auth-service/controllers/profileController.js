@@ -266,9 +266,61 @@ const uploadProfilePicture = async (req, res) => {
   }
 };
 
+// @desc    Get user profile by ID
+// @route   GET /api/profile/:userId
+// @access  Private (for internal service calls)
+const getProfileById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Get user basic info
+    const user = await User.findById(userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    let profile = null;
+
+    // Fetch profile based on role
+    if (user.role === 'doctor') {
+      profile = await DoctorProfile.findOne({ user: userId });
+    } else if (user.role === 'patient') {
+      profile = await PatientProfile.findOne({ user: userId });
+    }
+
+    // Prepare response
+    const responseData = {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profilePicture: user.profilePicture || profile?.profilePicture || null,
+      specialty: user.specialty,
+      qualifications: user.qualifications,
+      profile: profile || {},
+    };
+
+    res.status(200).json({
+      success: true,
+      data: responseData,
+    });
+  } catch (error) {
+    console.error('Get profile by ID error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   createOrUpdateProfile,
   deleteProfile,
   uploadProfilePicture,
+  getProfileById,
 };

@@ -52,50 +52,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <div className="w-full max-w-md">
         {/* Back Button */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 mb-8 transition-colors font-medium group"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           Back to Home
         </Link>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-3xl shadow-elegant-lg p-10 border border-gray-100">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-xl">
-              <Heart className="text-white" size={28} />
+          <div className="flex flex-col items-center mb-8">
+            <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4 rounded-2xl shadow-lg mb-4">
+              <Heart className="text-white" size={32} />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-3xl font-bold text-gray-900 tracking-tight">
               CureConnect
             </span>
           </div>
 
-          <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">Welcome Back</h2>
-          <p className="text-center text-gray-600 mb-8">Login to your account</p>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+            <p className="text-gray-600">Sign in to continue to your account</p>
+          </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm font-medium">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-gray-700 mb-2 font-medium">Email Address</label>
+              <label className="block text-gray-900 mb-2 font-semibold text-sm">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Enter your email"
+                  className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  placeholder="you@example.com"
                   required
                   disabled={loading}
                 />
@@ -103,14 +105,14 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 mb-2 font-medium">Password</label>
+              <label className="block text-gray-900 mb-2 font-semibold text-sm">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
                   placeholder="Enter your password"
                   required
                   disabled={loading}
@@ -121,17 +123,24 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all transform hover:scale-[1.02] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl hover:shadow-elegant-lg transition-all font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none mt-8"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Signing in...
+                </span>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <p className="text-gray-600">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
-                Register here
+              <Link href="/register" className="text-indigo-600 hover:text-indigo-700 font-bold">
+                Create Account
               </Link>
             </p>
           </div>

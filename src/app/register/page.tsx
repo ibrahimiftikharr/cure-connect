@@ -31,6 +31,11 @@ export default function RegisterPage() {
     setError('');
 
     // Validation
+    if (!role) {
+      setError('Please select a role first');
+      return;
+    }
+
     if (!name || !email || !password) {
       setError('Please fill in all fields');
       return;
@@ -61,9 +66,11 @@ export default function RegisterPage() {
         role: role as 'doctor' | 'patient',
       };
 
+      console.log('Submitting signup data:', { ...data, password: '***' });
       await authService.signup(data);
       setStep('otp');
     } catch (err: any) {
+      console.error('Signup error:', err);
       setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);

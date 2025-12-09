@@ -20,7 +20,7 @@ npm install
 2. Configure environment variables in `.env`:
 ```env
 PORT=5002
-MONGODB_URI=mongodb://127.0.0.1:27017/cureconnect
+MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/cureconnect?retryWrites=true&w=majority&appName=Cluster0
 JWT_SECRET=your_jwt_secret
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret

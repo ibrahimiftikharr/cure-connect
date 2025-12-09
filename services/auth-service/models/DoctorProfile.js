@@ -103,14 +103,16 @@ const doctorProfileSchema = new mongoose.Schema({
 // Method to check if profile is complete
 doctorProfileSchema.methods.checkProfileCompletion = function() {
   const requiredFields = [
-    this.phone,
-    this.licenseNumber,
-    this.clinicAddress,
     this.city,
     this.consultationFee,
   ];
   
-  this.isProfileComplete = requiredFields.every(field => field != null && field !== '');
+  // Check if at least one availability slot is set
+  const hasAvailability = Object.values(this.availability || {}).some(day => 
+    day.enabled && day.slots && day.slots.length > 0
+  );
+  
+  this.isProfileComplete = requiredFields.every(field => field != null && field !== '') && hasAvailability;
   return this.isProfileComplete;
 };
 

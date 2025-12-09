@@ -13,7 +13,7 @@ interface Availability {
 }
 
 export default function DoctorProfilePage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const router = useRouter();
   
   const [loading, setLoading] = useState(true);
@@ -191,6 +191,7 @@ export default function DoctorProfilePage() {
       const response = await authService.uploadProfilePicture(file);
       if (response.success) {
         setProfilePicture(response.data.profilePicture.url);
+        updateProfile({ profilePicture: response.data.profilePicture });
         setSuccess('Profile picture uploaded successfully!');
         setTimeout(() => setSuccess(''), 3000);
       }
@@ -349,19 +350,6 @@ export default function DoctorProfilePage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Professional Information</h2>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-gray-700 font-medium mb-2">Medical License Number *</label>
-                  <input
-                    type="text"
-                    name="licenseNumber"
-                    value={formData.licenseNumber}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="Enter license number"
-                    required
-                  />
-                </div>
-
-                <div>
                   <label className="block text-gray-700 font-medium mb-2">Qualifications *</label>
                   <input
                     type="text"
@@ -433,25 +421,6 @@ export default function DoctorProfilePage() {
                       </label>
                     ))}
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Location Information */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Location</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">City *</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="City"
-                    required
-                  />
                 </div>
               </div>
             </div>

@@ -9,6 +9,26 @@ const signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
+    console.log('Signup request received:', { name, email, role, bodyKeys: Object.keys(req.body) });
+
+    // Validate required fields
+    if (!name || !email || !password || !role) {
+      console.log('Validation failed: Missing fields');
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required (name, email, password, role)',
+      });
+    }
+
+    // Validate role
+    if (!['patient', 'doctor'].includes(role)) {
+      console.log('Validation failed: Invalid role');
+      return res.status(400).json({
+        success: false,
+        message: 'Role must be either "patient" or "doctor"',
+      });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     

@@ -197,9 +197,6 @@ export default function DoctorDashboardPage() {
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{appointment.patientInfo.name}</h3>
-                      {appointment.patientInfo.phone && (
-                        <p className="text-sm text-gray-600">📞 {appointment.patientInfo.phone}</p>
-                      )}
                       <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
                           <Calendar size={16} />

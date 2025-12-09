@@ -128,7 +128,7 @@ export function NotificationCard({ notifications, onUpdate }: NotificationCardPr
           <div className="text-center py-12 text-gray-500">
             <Bell size={48} className="mx-auto mb-3 text-gray-300" />
             <p className="text-lg font-medium">No notifications yet</p>
-            <p className="text-sm mt-1">You'll see updates about your appointments here</p>
+            <p className="text-sm mt-1">You&apos;ll see updates about your appointments here</p>
           </div>
         )}
       </div>

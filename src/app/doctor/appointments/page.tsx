@@ -67,12 +67,12 @@ export default function DoctorAppointmentsPage() {
     if (user) {
       fetchAppointments();
     }
-  }, [user, filter]);
+  }, [user, filter, fetchAppointments]);
 
   const handleSocketEvent = useCallback((event: string, data: any) => {
     console.log('Socket event:', event, data);
     fetchAppointments();
-  }, [filter]);
+  }, [filter, fetchAppointments]);
 
   useSocket(user?.id || '', 'doctor', handleSocketEvent);
 

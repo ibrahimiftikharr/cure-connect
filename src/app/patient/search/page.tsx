@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PatientNav } from '@/components/PatientNav';
 import { Avatar } from '@/components/Avatar';
@@ -51,11 +51,7 @@ export default function SearchDoctorsPage() {
     'Radiology'
   ];
 
-  useEffect(() => {
-    fetchDoctors();
-  }, []);
-
-  const fetchDoctors = async (filters?: any) => {
+  const fetchDoctors = useCallback(async (filters?: any) => {
     try {
       setLoading(true);
       setError('');
@@ -76,7 +72,11 @@ export default function SearchDoctorsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedSpecialty, selectedCity, searchQuery]);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors]);
 
   const handleSearch = () => {
     fetchDoctors();

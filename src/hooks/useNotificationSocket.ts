@@ -37,7 +37,7 @@ export const useNotificationSocket = (userId: string, onNotification: (notificat
     return () => {
       newSocket.close();
     };
-  }, [userId]);
+  }, [userId, onNotification]);
 
   return { socket, connected };
 };

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APPOINTMENT_API_URL || 'http://localhost:5002/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_APPOINTMENT_API_URL!;
 
 const appointmentApi = axios.create({
   baseURL: API_BASE_URL,

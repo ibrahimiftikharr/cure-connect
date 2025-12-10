@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import io, { Socket } from 'socket.io-client';
 
-const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL?.replace('/api', '') || 'http://localhost:5003';
+const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL!.replace('/api', '');
 
 export const useNotificationSocket = (userId: string, onNotification: (notification: any) => void) => {
   const [socket, setSocket] = useState<Socket | null>(null);

@@ -13,7 +13,11 @@ export const useNotificationSocket = (userId: string, onNotification: (notificat
     if (!userId) return;
 
     const newSocket = io(NOTIFICATION_SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
     });
 
     newSocket.on('connect', () => {

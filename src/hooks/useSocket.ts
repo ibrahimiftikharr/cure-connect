@@ -13,7 +13,11 @@ export const useSocket = (userId: string, role: 'doctor' | 'patient', onEvent: (
 
     // Connect to Socket.IO server
     socketRef.current = io(SOCKET_URL, {
+      transports: ['polling', 'websocket'],
       withCredentials: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
     });
 
     // Join user-specific room

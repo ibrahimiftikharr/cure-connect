@@ -26,13 +26,18 @@ export const useNotificationSocket = (userId: string, onNotification: (notificat
       newSocket.emit('register', userId);
     });
 
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error.message);
+      setConnected(false);
+    });
+
     newSocket.on('new_notification', (notification) => {
       console.log('New notification received:', notification);
       onNotification(notification);
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from notification service');
+    newSocket.on('disconnect', (reason) => {
+      console.log('Disconnected from notification service:', reason);
       setConnected(false);
     });
 

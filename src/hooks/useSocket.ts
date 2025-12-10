@@ -20,6 +20,15 @@ export const useSocket = (userId: string, role: 'doctor' | 'patient', onEvent: (
       reconnectionAttempts: 5,
     });
 
+    // Connection event handlers
+    socketRef.current.on('connect', () => {
+      console.log('Connected to socket service');
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('Socket connection error:', error.message);
+    });
+
     // Join user-specific room
     socketRef.current.emit('join', { userId, role });
 

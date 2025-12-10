@@ -22,10 +22,16 @@ const io = new Server(server, {
   allowEIO3: true,
   pingTimeout: 60000,
   pingInterval: 25000,
+  path: '/socket.io/',
+  allowUpgrades: true,
+  perMessageDeflate: false,
 });
 
 // Initialize Socket.IO
 initSocket(io);
+
+// Trust proxy for Railway
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(cors({

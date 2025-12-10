@@ -6,9 +6,17 @@ let io;
 const initializeSocket = (server) => {
   io = socketIO(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: process.env.FRONTEND_URL,
       credentials: true,
+      methods: ['GET', 'POST'],
     },
+    transports: ['polling', 'websocket'],
+    allowEIO3: true,
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    path: '/socket.io/',
+    allowUpgrades: true,
+    perMessageDeflate: false,
   });
 
   io.on('connection', (socket) => {

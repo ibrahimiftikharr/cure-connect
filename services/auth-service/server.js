@@ -17,6 +17,9 @@ connectDB();
 // Security middleware
 app.use(helmet());
 
+// Trust proxy for Railway
+app.set('trust proxy', 1);
+
 // CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL,

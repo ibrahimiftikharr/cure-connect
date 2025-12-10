@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APPOINTMENT_API_URL!;
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_APPOINTMENT_API_URL}/appointments`;
 
 const appointmentApi = axios.create({
   baseURL: API_BASE_URL,
@@ -57,32 +57,32 @@ const bookAppointment = async (data: {
   timeSlot: string;
   symptoms: string;
 }) => {
-  const response = await appointmentApi.post('/appointments/book', data);
+  const response = await appointmentApi.post('/book', data);
   return response.data;
 };
 
 // Get appointments (Doctor or Patient)
 const getAppointments = async (status?: string) => {
   const params = status ? { status } : {};
-  const response = await appointmentApi.get('/appointments', { params });
+  const response = await appointmentApi.get('/', { params });
   return response.data;
 };
 
 // Approve appointment (Doctor)
 const approveAppointment = async (appointmentId: string, meetLink: string) => {
-  const response = await appointmentApi.patch(`/appointments/${appointmentId}/approve`, { meetLink });
+  const response = await appointmentApi.patch(`/${appointmentId}/approve`, { meetLink });
   return response.data;
 };
 
 // Reject appointment (Doctor)
 const rejectAppointment = async (appointmentId: string, reason: string) => {
-  const response = await appointmentApi.patch(`/appointments/${appointmentId}/reject`, { reason });
+  const response = await appointmentApi.patch(`/${appointmentId}/reject`, { reason });
   return response.data;
 };
 
 // Complete appointment (Doctor or Patient)
 const completeAppointment = async (appointmentId: string) => {
-  const response = await appointmentApi.patch(`/appointments/${appointmentId}/complete`);
+  const response = await appointmentApi.patch(`/${appointmentId}/complete`);
   return response.data;
 };
 
